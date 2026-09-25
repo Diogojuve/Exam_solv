@@ -19,7 +19,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                                        <ul class="navbar-nav flex-grow-1">
+                    <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
@@ -36,6 +36,10 @@
                             </li>
                         }
                     </ul>
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <span id="ws-status" class="badge bg-secondary align-self-center me-3">Conectando...</span>
+                    }
                     <partial name="_LoginPartial" />
                 </div>
             </div>
@@ -47,6 +51,9 @@
         </main>
     </div>
 
+    <!-- Contenedor de notificaciones en tiempo real -->
+    <div id="ws-toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;"></div>
+
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2026 - PlataformaCreditos - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -55,6 +62,11 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+        <script src="~/js/solicitudes-hub.js" asp-append-version="true"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

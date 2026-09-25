@@ -5,7 +5,7 @@
 
 <h2>Detalle de Solicitud #@Model.Id</h2>
 
-<dl class="row">
+<dl class="row" data-solicitud-id="@Model.Id">
     <dt class="col-sm-3">Monto Solicitado</dt>
     <dd class="col-sm-9">@Model.MontoSolicitado.ToString("C")</dd>
 
@@ -14,16 +14,13 @@
 
     <dt class="col-sm-3">Estado</dt>
     <dd class="col-sm-9">
-        <span class="badge bg-@(Model.Estado == PlataformaCreditos.Models.EstadoSolicitud.Aprobado ? "success" : Model.Estado == PlataformaCreditos.Models.EstadoSolicitud.Rechazado ? "danger" : "warning")">
+        <span id="estado-badge-@Model.Id" class="badge bg-@(Model.Estado == PlataformaCreditos.Models.EstadoSolicitud.Aprobado ? "success" : Model.Estado == PlataformaCreditos.Models.EstadoSolicitud.Rechazado ? "danger" : "warning")">
             @Model.Estado
         </span>
     </dd>
 
-    @if (Model.Estado == PlataformaCreditos.Models.EstadoSolicitud.Rechazado)
-    {
-        <dt class="col-sm-3">Motivo de Rechazo</dt>
-        <dd class="col-sm-9">@Model.MotivoRechazo</dd>
-    }
+    <dt class="col-sm-3" id="motivo-label-@Model.Id" style="display: @(Model.Estado == PlataformaCreditos.Models.EstadoSolicitud.Rechazado ? "block" : "none")">Motivo de Rechazo</dt>
+    <dd class="col-sm-9" id="motivo-valor-@Model.Id" style="display: @(Model.Estado == PlataformaCreditos.Models.EstadoSolicitud.Rechazado ? "block" : "none")">@Model.MotivoRechazo</dd>
 </dl>
 
 <a asp-action="Mis" class="btn btn-secondary">Volver</a>

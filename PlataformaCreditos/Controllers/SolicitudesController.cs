@@ -89,7 +89,6 @@ namespace PlataformaCreditos.Controllers
         }
 
         // GET: /Solicitudes/Detalle/5
-                // GET: /Solicitudes/Detalle/5
         public async Task<IActionResult> Detalle(int id)
         {
             var userId = _userManager.GetUserId(User);
@@ -108,6 +107,32 @@ namespace PlataformaCreditos.Controllers
             HttpContext.Session.SetString("UltimaSolicitudMonto", solicitud.MontoSolicitado.ToString("C"));
 
             return View(solicitud);
+        }
+
+        // GET: /Solicitudes/MisEstadosJson
+        // Usado por el cliente WebSocket para resincronizar estados tras una reconexión
+        [HttpGet]
+        public async Task<IActionResult> MisEstadosJson()
+        {
+            var userId = _userManager.GetUserId(User);
+            var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.UsuarioId == userId);
+
+            if (cliente == null)
+            {
+                return Json(new List<object>());
+            }
+
+            var data = await _context.Solicitudes
+                .Where(s => s.ClienteId == cliente.Id)
+                .Select(s => new
+                {
+                    id = s.Id,
+                    estado = s.Estado.ToString(),
+                    motivoRechazo = s.MotivoRechazo
+                })
+                .ToListAsync();
+
+            return Json(data);
         }
 
         // GET: /Solicitudes/Crear
