@@ -36,7 +36,6 @@ namespace PlataformaCreditos.Controllers
                 return View(new List<SolicitudCredito>());
             }
 
-            // --- Validaciones server-side de los filtros ---
             if (montoMin.HasValue && montoMin < 0)
             {
                 ModelState.AddModelError(string.Empty, "El monto mínimo no puede ser negativo.");
@@ -104,6 +103,88 @@ namespace PlataformaCreditos.Controllers
             if (solicitud == null) return NotFound();
 
             return View(solicitud);
+        }
+
+        // GET: /Solicitudes/Crear
+        public async Task<IActionResult> Crear()
+        {
+            var userId = _userManager.GetUserId(User);
+            var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.UsuarioId == userId);
+
+            if (cliente == null)
+            {
+                TempData["Error"] = "No se encontró un cliente asociado a tu usuario.";
+                return RedirectToAction(nameof(Mis));
+            }
+
+            if (!cliente.Activo)
+            {
+                TempData["Error"] = "Tu cuenta de cliente está inactiva. No puedes registrar solicitudes.";
+                return RedirectToAction(nameof(Mis));
+            }
+
+            ViewBag.IngresosMensuales = cliente.IngresosMensuales;
+            return View();
+        }
+
+        // POST: /Solicitudes/Crear
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Crear(decimal montoSolicitado)
+        {
+            var userId = _userManager.GetUserId(User);
+            var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.UsuarioId == userId);
+
+            if (cliente == null)
+            {
+                ModelState.AddModelError(string.Empty, "No se encontró un cliente asociado a tu usuario.");
+                return View();
+            }
+
+            if (!cliente.Activo)
+            {
+                ModelState.AddModelError(string.Empty, "Tu cuenta de cliente está inactiva. No puedes registrar solicitudes.");
+                ViewBag.IngresosMensuales = cliente.IngresosMensuales;
+                return View();
+            }
+
+            var tienePendiente = await _context.Solicitudes
+                .AnyAsync(s => s.ClienteId == cliente.Id && s.Estado == EstadoSolicitud.Pendiente);
+
+            if (tienePendiente)
+            {
+                ModelState.AddModelError(string.Empty, "Ya tienes una solicitud pendiente. No puedes registrar otra hasta que sea resuelta.");
+            }
+
+            if (montoSolicitado > cliente.IngresosMensuales * 10)
+            {
+                ModelState.AddModelError(string.Empty, $"El monto solicitado no puede superar 10 veces tus ingresos mensuales (máximo: {(cliente.IngresosMensuales * 10):C}).");
+            }
+
+            if (montoSolicitado <= 0)
+            {
+                ModelState.AddModelError(string.Empty, "El monto solicitado debe ser mayor a 0.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.IngresosMensuales = cliente.IngresosMensuales;
+                return View();
+            }
+
+            var solicitud = new SolicitudCredito
+            {
+                ClienteId = cliente.Id,
+                MontoSolicitado = montoSolicitado,
+                FechaSolicitud = DateTime.Now,
+                Estado = EstadoSolicitud.Pendiente
+            };
+
+            _context.Solicitudes.Add(solicitud);
+            await _context.SaveChangesAsync();
+
+            TempData["Exito"] = "Solicitud registrada correctamente. Queda en estado Pendiente.";
+            return RedirectToAction(nameof(Mis));
         }
     }
 }

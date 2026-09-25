@@ -1,0 +1,12 @@
+## Carpetas de compilación .NET
+bin/
+obj/
+
+## Archivos de usuario / IDE
+*.user
+*.suo
+.vs/
+.vscode/
+
+## Logs
+*.log
