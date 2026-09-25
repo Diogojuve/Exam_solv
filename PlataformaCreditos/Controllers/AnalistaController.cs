@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using PlataformaCreditos.Data;
+using PlataformaCreditos.Hubs;
 using PlataformaCreditos.Models;
 
 namespace PlataformaCreditos.Controllers
@@ -12,11 +14,13 @@ namespace PlataformaCreditos.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IDistributedCache _cache;
+        private readonly IHubContext<SolicitudesHub> _hubContext;
 
-        public AnalistaController(ApplicationDbContext context, IDistributedCache cache)
+        public AnalistaController(ApplicationDbContext context, IDistributedCache cache, IHubContext<SolicitudesHub> hubContext)
         {
             _context = context;
             _cache = cache;
+            _hubContext = hubContext;
         }
 
         // GET: /Analista
@@ -71,6 +75,14 @@ namespace PlataformaCreditos.Controllers
             // Invalidamos el caché de "Mis solicitudes" del cliente, ya que cambió el estado
             await _cache.RemoveAsync($"solicitudes:cliente:{solicitud.ClienteId}");
 
+            // Emitir evento en tiempo real SOLO al dueño de la solicitud
+            await _hubContext.Clients.Group(solicitud.Cliente.UsuarioId).SendAsync("SolicitudEstadoActualizado", new
+            {
+                SolicitudId = solicitud.Id,
+                Estado = solicitud.Estado.ToString(),
+                MotivoRechazo = solicitud.MotivoRechazo
+            });
+
             TempData["Exito"] = $"Solicitud #{solicitud.Id} aprobada correctamente.";
             return RedirectToAction(nameof(Index));
         }
@@ -80,7 +92,9 @@ namespace PlataformaCreditos.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rechazar(int id, string motivoRechazo)
         {
-            var solicitud = await _context.Solicitudes.FirstOrDefaultAsync(s => s.Id == id);
+            var solicitud = await _context.Solicitudes
+                .Include(s => s.Cliente)
+                .FirstOrDefaultAsync(s => s.Id == id);
 
             if (solicitud == null)
             {
@@ -100,11 +114,25 @@ namespace PlataformaCreditos.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            if (solicitud.Cliente == null)
+            {
+                TempData["Error"] = "No se encontró el cliente asociado.";
+                return RedirectToAction(nameof(Index));
+            }
+
             solicitud.Estado = EstadoSolicitud.Rechazado;
             solicitud.MotivoRechazo = motivoRechazo;
             await _context.SaveChangesAsync();
 
             await _cache.RemoveAsync($"solicitudes:cliente:{solicitud.ClienteId}");
+
+            // Emitir evento en tiempo real SOLO al dueño de la solicitud
+            await _hubContext.Clients.Group(solicitud.Cliente.UsuarioId).SendAsync("SolicitudEstadoActualizado", new
+            {
+                SolicitudId = solicitud.Id,
+                Estado = solicitud.Estado.ToString(),
+                MotivoRechazo = solicitud.MotivoRechazo
+            });
 
             TempData["Exito"] = $"Solicitud #{solicitud.Id} rechazada correctamente.";
             return RedirectToAction(nameof(Index));

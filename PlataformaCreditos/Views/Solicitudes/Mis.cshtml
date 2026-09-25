@@ -66,11 +66,11 @@
     <tbody>
         @foreach (var s in Model)
         {
-            <tr>
+            <tr data-solicitud-id="@s.Id">
                 <td>@s.Id</td>
                 <td>@s.MontoSolicitado.ToString("C")</td>
                 <td>@s.FechaSolicitud.ToString("dd/MM/yyyy")</td>
-                <td>@s.Estado</td>
+                <td id="estado-cell-@s.Id">@s.Estado</td>
                 <td><a asp-action="Detalle" asp-route-id="@s.Id" class="btn btn-sm btn-outline-secondary">Ver detalle</a></td>
             </tr>
         }

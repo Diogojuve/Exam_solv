@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PlataformaCreditos.Data;
 using Microsoft.AspNetCore.Http;
+using PlataformaCreditos.Hubs;
 
 
 
@@ -31,6 +32,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -52,6 +54,8 @@ app.UseRouting();
 
 app.UseSession();
 
+app.UseAuthentication(); 
+
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -60,6 +64,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+app.MapHub<SolicitudesHub>("/hubs/solicitudes"); 
 
 app.MapRazorPages()
    .WithStaticAssets();
