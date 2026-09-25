@@ -1,19 +1,30 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PlataformaCreditos.Data;
-using Microsoft.AspNetCore.Http;
 using PlataformaCreditos.Hubs;
 using PlataformaCreditos.Services;
-
-
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// --- Puerto: Render inyecta la variable de entorno PORT. La leemos directo en código,
+// en vez de depender de que ${PORT} se expanda dentro de ASPNETCORE_URLS (no ocurre automaticamente).
+var renderPort = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(renderPort))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{renderPort}");
+}
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
-    var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+
+// Acepta tanto ConnectionStrings:Redis (uso local con user-secrets) como Redis:ConnectionString
+// (variable de entorno Redis__ConnectionString en Render).
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"]
+    ?? builder.Configuration.GetConnectionString("Redis")
+    ?? "localhost:6379";
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -34,6 +45,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
+
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMq"));
 builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 builder.Services.AddHostedService<NotificacionConsumerService>();
@@ -48,7 +60,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -58,8 +69,7 @@ app.UseRouting();
 
 app.UseSession();
 
-app.UseAuthentication(); 
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -69,7 +79,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-app.MapHub<SolicitudesHub>("/hubs/solicitudes"); 
+app.MapHub<SolicitudesHub>("/hubs/solicitudes");
 
 app.MapRazorPages()
    .WithStaticAssets();
@@ -83,13 +93,11 @@ using (var scope = app.Services.CreateScope())
 
     db.Database.Migrate();
 
-    // 1. Crear rol Analista si no existe
     if (!await roleManager.RoleExistsAsync("Analista"))
     {
         await roleManager.CreateAsync(new IdentityRole("Analista"));
     }
 
-    // 2. Crear usuario Analista si no existe
     var analistaEmail = "analista@creditos.com";
     var analista = await userManager.FindByEmailAsync(analistaEmail);
     if (analista == null)
@@ -98,13 +106,12 @@ using (var scope = app.Services.CreateScope())
         {
             UserName = analistaEmail,
             Email = analistaEmail,
-            EmailConfirmed = true // para que pueda iniciar sesión sin confirmar correo
+            EmailConfirmed = true
         };
         await userManager.CreateAsync(analista, "Analista123!");
         await userManager.AddToRoleAsync(analista, "Analista");
     }
 
-    // 3. Crear 2 usuarios clientes (para vincular a los Clientes)
     async Task<IdentityUser> CrearUsuarioSiNoExiste(string email, string password)
     {
         var user = await userManager.FindByEmailAsync(email);
@@ -124,7 +131,6 @@ using (var scope = app.Services.CreateScope())
     var usuarioCliente1 = await CrearUsuarioSiNoExiste("cliente1@creditos.com", "Cliente123!");
     var usuarioCliente2 = await CrearUsuarioSiNoExiste("cliente2@creditos.com", "Cliente123!");
 
-    // 4. Crear 2 clientes si no existen
     if (!db.Clientes.Any())
     {
         var cliente1 = new PlataformaCreditos.Models.Cliente
@@ -144,7 +150,6 @@ using (var scope = app.Services.CreateScope())
         db.Clientes.AddRange(cliente1, cliente2);
         await db.SaveChangesAsync();
 
-        // 5. Crear 2 solicitudes: una Pendiente y una Aprobada
         db.Solicitudes.AddRange(
             new PlataformaCreditos.Models.SolicitudCredito
             {
@@ -165,6 +170,5 @@ using (var scope = app.Services.CreateScope())
         await db.SaveChangesAsync();
     }
 }
-// --- FIN SEED ---
 
 app.Run();

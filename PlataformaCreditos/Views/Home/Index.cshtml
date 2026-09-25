@@ -1,8 +1,48 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center py-5">
+    <h1 class="display-4 mb-3">Plataforma de Créditos</h1>
+    <p class="lead mb-4">
+        Registra tus solicitudes de crédito y sigue su evaluación en tiempo real,
+        con notificaciones automáticas cuando un analista apruebe o rechace tu solicitud.
+    </p>
+
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a asp-controller="Solicitudes" asp-action="Mis" class="btn btn-primary btn-lg px-4">Mis Solicitudes</a>
+            <a asp-controller="Solicitudes" asp-action="Crear" class="btn btn-outline-primary btn-lg px-4">Nueva Solicitud</a>
+            <a asp-controller="Notificaciones" asp-action="Index" class="btn btn-outline-primary btn-lg px-4">Mis Notificaciones</a>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg px-4">Iniciar sesión</a>
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-primary btn-lg px-4">Registrarme</a>
+        </div>
+    }
+</div>
+
+<div class="row mt-5 g-4">
+    <div class="col-md-4">
+        <div class="card h-100 p-3">
+            <h5>1. Registra tu solicitud</h5>
+            <p class="mb-0">Completa el monto solicitado y queda en estado <strong>Pendiente</strong> de evaluación.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-3">
+            <h5>2. Un analista la evalúa</h5>
+            <p class="mb-0">El equipo de riesgo aprueba o rechaza según tu capacidad de pago.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 p-3">
+            <h5>3. Te notificamos al instante</h5>
+            <p class="mb-0">Recibes el resultado en tiempo real, sin necesidad de recargar la página.</p>
+        </div>
+    </div>
 </div>

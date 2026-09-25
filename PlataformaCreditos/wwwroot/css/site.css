@@ -29,3 +29,105 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* ===== Paleta PlataformaCreditos ===== */
+:root {
+  --pc-azul-oscuro: #0f2c4c;
+  --pc-azul: #1d4e89;
+  --pc-verde: #1b998b;
+  --pc-gris-claro: #f4f7fa;
+  --pc-texto: #1f2937;
+}
+
+body {
+  background-color: var(--pc-gris-claro);
+  color: var(--pc-texto);
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--pc-azul-oscuro) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-brand {
+  color: #ffffff !important;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.navbar .nav-link {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.navbar .nav-link:hover {
+  color: #ffffff !important;
+}
+
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.navbar-toggler-icon {
+  filter: invert(1);
+}
+
+/* Titulos */
+h1, h2, h3 {
+  color: var(--pc-azul-oscuro);
+  font-weight: 700;
+}
+
+/* Botones primarios */
+.btn-primary {
+  background-color: var(--pc-azul);
+  border-color: var(--pc-azul);
+}
+
+.btn-primary:hover {
+  background-color: var(--pc-azul-oscuro);
+  border-color: var(--pc-azul-oscuro);
+}
+
+/* Tablas tipo tarjeta */
+.table {
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+.table thead {
+  background-color: var(--pc-azul-oscuro);
+  color: #ffffff;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: rgba(27, 153, 139, 0.06);
+}
+
+/* Badges de estado (los usados en Detalle.cshtml) */
+.badge.bg-success { background-color: var(--pc-verde) !important; }
+.badge.bg-warning { background-color: #e0a800 !important; color: #212529; }
+.badge.bg-danger  { background-color: #c0392b !important; }
+
+/* Footer */
+.footer {
+  background-color: var(--pc-azul-oscuro);
+  color: rgba(255, 255, 255, 0.75);
+  padding: 12px 0;
+}
+
+.footer a {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* Cards genericas (por si se usan en formularios) */
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
