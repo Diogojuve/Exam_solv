@@ -278,3 +278,4 @@ D:\Git\Practica GIT Entregable\PlataformaCreditos\obj\Debug\net10.0\refint\Plata
 D:\Git\Practica GIT Entregable\PlataformaCreditos\obj\Debug\net10.0\PlataformaCreditos.pdb
 D:\Git\Practica GIT Entregable\PlataformaCreditos\obj\Debug\net10.0\PlataformaCreditos.genruntimeconfig.cache
 D:\Git\Practica GIT Entregable\PlataformaCreditos\obj\Debug\net10.0\ref\PlataformaCreditos.dll
+D:\Git\Practica GIT Entregable\PlataformaCreditos\obj\Debug\net10.0\PlataformaCreditos.sourcelink.json
