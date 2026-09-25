@@ -10,3 +10,4 @@ obj/
 
 ## Logs
 *.log
+*.db
