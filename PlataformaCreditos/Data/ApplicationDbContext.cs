@@ -8,6 +8,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<SolicitudCredito> Solicitudes => Set<SolicitudCredito>();
+    public DbSet<Notificacion> Notificaciones => Set<Notificacion>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -32,5 +33,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(c => c.UsuarioId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // MessageId único: evita insertar la misma notificación dos veces si RabbitMQ reentrega el mensaje.
+        builder.Entity<Notificacion>()
+            .HasIndex(n => n.MessageId)
+            .IsUnique();
     }
 }

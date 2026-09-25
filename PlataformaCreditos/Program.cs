@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PlataformaCreditos.Data;
 using Microsoft.AspNetCore.Http;
 using PlataformaCreditos.Hubs;
+using PlataformaCreditos.Services;
 
 
 
@@ -33,6 +34,9 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMq"));
+builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
+builder.Services.AddHostedService<NotificacionConsumerService>();
 
 var app = builder.Build();
 

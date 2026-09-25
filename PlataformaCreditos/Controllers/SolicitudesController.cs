@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlataformaCreditos.Data;
 using PlataformaCreditos.Models;
+using PlataformaCreditos.Services;
 
 namespace PlataformaCreditos.Controllers
 {
@@ -12,11 +13,16 @@ namespace PlataformaCreditos.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IRabbitMqPublisher _rabbitMqPublisher;
 
-        public SolicitudesController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        public SolicitudesController(
+            ApplicationDbContext context,
+            UserManager<IdentityUser> userManager,
+            IRabbitMqPublisher rabbitMqPublisher)
         {
             _context = context;
             _userManager = userManager;
+            _rabbitMqPublisher = rabbitMqPublisher;
         }
 
         // GET: /Solicitudes/Mis
@@ -102,7 +108,6 @@ namespace PlataformaCreditos.Controllers
 
             if (solicitud == null) return NotFound();
 
-            // Guardamos en sesión (respaldada por Redis) la última solicitud visitada
             HttpContext.Session.SetInt32("UltimaSolicitudId", solicitud.Id);
             HttpContext.Session.SetString("UltimaSolicitudMonto", solicitud.MontoSolicitado.ToString("C"));
 
@@ -110,7 +115,6 @@ namespace PlataformaCreditos.Controllers
         }
 
         // GET: /Solicitudes/MisEstadosJson
-        // Usado por el cliente WebSocket para resincronizar estados tras una reconexión
         [HttpGet]
         public async Task<IActionResult> MisEstadosJson()
         {
@@ -213,7 +217,27 @@ namespace PlataformaCreditos.Controllers
             _context.Solicitudes.Add(solicitud);
             await _context.SaveChangesAsync();
 
-            TempData["Exito"] = "Solicitud registrada correctamente. Queda en estado Pendiente.";
+            // Publicar evento SolicitudRegistrada solo despues de que la persistencia fue exitosa
+            var mensaje = new SolicitudRegistradaMessage
+            {
+                MessageId = Guid.NewGuid().ToString(),
+                SolicitudId = solicitud.Id,
+                UsuarioId = userId!,
+                FechaEventoUtc = DateTime.UtcNow
+            };
+
+            var publicado = await _rabbitMqPublisher.PublicarSolicitudRegistradaAsync(mensaje);
+
+            if (publicado)
+            {
+                TempData["Exito"] = "Solicitud registrada correctamente. Queda en estado Pendiente.";
+            }
+            else
+            {
+                TempData["Exito"] = "Solicitud registrada correctamente. Queda en estado Pendiente.";
+                TempData["Advertencia"] = "La notificacion de recepcion no pudo encolarse (fallo temporal de mensajeria). La solicitud SI quedo guardada.";
+            }
+
             return RedirectToAction(nameof(Mis));
         }
     }
