@@ -89,6 +89,7 @@ namespace PlataformaCreditos.Controllers
         }
 
         // GET: /Solicitudes/Detalle/5
+                // GET: /Solicitudes/Detalle/5
         public async Task<IActionResult> Detalle(int id)
         {
             var userId = _userManager.GetUserId(User);
@@ -101,6 +102,10 @@ namespace PlataformaCreditos.Controllers
                 .FirstOrDefaultAsync(s => s.Id == id && s.ClienteId == cliente.Id);
 
             if (solicitud == null) return NotFound();
+
+            // Guardamos en sesión (respaldada por Redis) la última solicitud visitada
+            HttpContext.Session.SetInt32("UltimaSolicitudId", solicitud.Id);
+            HttpContext.Session.SetString("UltimaSolicitudMonto", solicitud.MontoSolicitado.ToString("C"));
 
             return View(solicitud);
         }
