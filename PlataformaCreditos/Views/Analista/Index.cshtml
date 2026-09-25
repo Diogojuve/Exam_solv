@@ -1,0 +1,78 @@
+@model List<PlataformaCreditos.Models.SolicitudCredito>
+@{
+    ViewData["Title"] = "Panel de Analista";
+}
+
+<h2>Panel de Analista - Solicitudes Pendientes</h2>
+
+@if (TempData["Exito"] != null)
+{
+    <div class="alert alert-success">@TempData["Exito"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (!Model.Any())
+{
+    <p>No hay solicitudes pendientes.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Cliente (Ingresos)</th>
+                <th>Monto Solicitado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.Id</td>
+                    <td>@(s.Cliente?.IngresosMensuales.ToString("C"))</td>
+                    <td>@s.MontoSolicitado.ToString("C")</td>
+                    <td>@s.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <form asp-action="Aprobar" asp-route-id="@s.Id" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('¿Aprobar esta solicitud?');">Aprobar</button>
+                        </form>
+
+                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rechazoModal@(s.Id)">
+                            Rechazar
+                        </button>
+
+                        <!-- Modal de motivo de rechazo -->
+                        <div class="modal fade" id="rechazoModal@(s.Id)" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form asp-action="Rechazar" asp-route-id="@s.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Rechazar Solicitud #@s.Id</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <label>Motivo de rechazo (obligatorio)</label>
+                                            <textarea name="motivoRechazo" class="form-control" required></textarea>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-danger">Confirmar Rechazo</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
