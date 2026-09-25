@@ -36,6 +36,9 @@
                             </li>
                         }
                     </ul>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-controller="Notificaciones" asp-action="Index">Mis Notificaciones</a>
+                    </li>   
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
                         <span id="ws-status" class="badge bg-secondary align-self-center me-3">Conectando...</span>

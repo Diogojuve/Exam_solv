@@ -1,0 +1,33 @@
+@model List<PlataformaCreditos.Models.Notificacion>
+@{
+    ViewData["Title"] = "Mis Notificaciones";
+}
+
+<h2>Mis Notificaciones</h2>
+
+@if (!Model.Any())
+{
+    <p>No tienes notificaciones todavia.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Solicitud</th>
+                <th>Mensaje</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var n in Model)
+            {
+                <tr>
+                    <td>#@n.SolicitudId</td>
+                    <td>@n.Texto</td>
+                    <td>@n.FechaProcesamientoUtc.ToString("dd/MM/yyyy HH:mm") UTC</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
