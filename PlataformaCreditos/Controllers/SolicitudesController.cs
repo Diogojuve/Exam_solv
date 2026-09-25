@@ -36,7 +36,6 @@ namespace PlataformaCreditos.Controllers
                 return View(new List<SolicitudCredito>());
             }
 
-            // --- Validaciones server-side de los filtros ---
             if (montoMin.HasValue && montoMin < 0)
             {
                 ModelState.AddModelError(string.Empty, "El monto mínimo no puede ser negativo.");
@@ -149,7 +148,6 @@ namespace PlataformaCreditos.Controllers
                 return View();
             }
 
-            // Regla: no más de una solicitud Pendiente por cliente
             var tienePendiente = await _context.Solicitudes
                 .AnyAsync(s => s.ClienteId == cliente.Id && s.Estado == EstadoSolicitud.Pendiente);
 
@@ -158,13 +156,11 @@ namespace PlataformaCreditos.Controllers
                 ModelState.AddModelError(string.Empty, "Ya tienes una solicitud pendiente. No puedes registrar otra hasta que sea resuelta.");
             }
 
-            // Regla: monto no puede superar 10 veces los ingresos mensuales
             if (montoSolicitado > cliente.IngresosMensuales * 10)
             {
                 ModelState.AddModelError(string.Empty, $"El monto solicitado no puede superar 10 veces tus ingresos mensuales (máximo: {(cliente.IngresosMensuales * 10):C}).");
             }
 
-            // Regla: monto debe ser mayor a 0
             if (montoSolicitado <= 0)
             {
                 ModelState.AddModelError(string.Empty, "El monto solicitado debe ser mayor a 0.");
